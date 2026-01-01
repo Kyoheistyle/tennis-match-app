@@ -1,11 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 
-const STORAGE_KEY = 'tennis-match-progress';
+const STORAGE_NAMESPACE = 'tennisMatchApp:league';
+const ACTIVE_LEAGUE_KEY = 'tennisMatchApp:activeLeague';
+const LEGACY_STORAGE_KEY = 'tennis-match-progress';
 
-type StoredState = {
+type LeagueId = 'A' | 'B';
+
+type LegacyStoredState = {
   pairCount: number;
   completedIds: string[];
+};
+
+type LeagueState = {
+  pairCount: number;
+  completedMap: Record<string, boolean>;
 };
 
 type Match = {
@@ -14,9 +23,9 @@ type Match = {
   pairB: number;
 };
 
-const defaultState: StoredState = {
+const defaultLeagueState: LeagueState = {
   pairCount: 4,
-  completedIds: [],
+  completedMap: {},
 };
 
 const generateMatches = (pairCount: number): Match[] => {
@@ -33,19 +42,17 @@ const generateMatches = (pairCount: number): Match[] => {
   return matches;
 };
 
-const loadState = (): StoredState => {
-  if (typeof window === 'undefined') {
-    return defaultState;
-  }
+const leagueKey = (leagueId: LeagueId) => `${STORAGE_NAMESPACE}:${leagueId}`;
 
+const loadLegacyState = (): LegacyStoredState | null => {
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const stored = window.localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!stored) {
-      return defaultState;
+      return null;
     }
-    const parsed = JSON.parse(stored) as StoredState;
+    const parsed = JSON.parse(stored) as LegacyStoredState;
     if (!parsed || typeof parsed.pairCount !== 'number') {
-      return defaultState;
+      return null;
     }
     return {
       pairCount: parsed.pairCount,
@@ -54,37 +61,109 @@ const loadState = (): StoredState => {
         : [],
     };
   } catch {
-    return defaultState;
+    return null;
+  }
+};
+
+const loadLeagueState = (leagueId: LeagueId): LeagueState => {
+  if (typeof window === 'undefined') {
+    return defaultLeagueState;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(leagueKey(leagueId));
+    if (!stored) {
+      if (leagueId === 'A') {
+        const legacy = loadLegacyState();
+        if (legacy) {
+          return {
+            pairCount: legacy.pairCount,
+            completedMap: Object.fromEntries(legacy.completedIds.map((id) => [id, true])),
+          };
+        }
+      }
+      return defaultLeagueState;
+    }
+    const parsed = JSON.parse(stored) as LeagueState;
+    if (!parsed || typeof parsed.pairCount !== 'number') {
+      return defaultLeagueState;
+    }
+    return {
+      pairCount: parsed.pairCount,
+      completedMap:
+        parsed.completedMap && typeof parsed.completedMap === 'object'
+          ? parsed.completedMap
+          : {},
+    };
+  } catch {
+    return defaultLeagueState;
   }
 };
 
 const App = () => {
-  const [pairCount, setPairCount] = useState(() => loadState().pairCount);
-  const [completedIds, setCompletedIds] = useState<string[]>(() => loadState().completedIds);
+  const [activeLeague, setActiveLeague] = useState<LeagueId>(() => {
+    if (typeof window === 'undefined') {
+      return 'A';
+    }
+    const stored = window.localStorage.getItem(ACTIVE_LEAGUE_KEY);
+    return stored === 'B' ? 'B' : 'A';
+  });
+  const [leagues, setLeagues] = useState<Record<LeagueId, LeagueState>>(() => ({
+    A: loadLeagueState('A'),
+    B: loadLeagueState('B'),
+  }));
 
-  const matches = useMemo(() => generateMatches(pairCount), [pairCount]);
+  const currentLeague = leagues[activeLeague];
+  const matches = useMemo(
+    () => generateMatches(currentLeague.pairCount),
+    [currentLeague.pairCount],
+  );
 
   useEffect(() => {
     const matchIds = new Set(matches.map((match) => match.id));
-    setCompletedIds((prev) => prev.filter((id) => matchIds.has(id)));
-  }, [matches]);
+    setLeagues((prev) => ({
+      ...prev,
+      [activeLeague]: {
+        ...prev[activeLeague],
+        completedMap: Object.fromEntries(
+          Object.entries(prev[activeLeague].completedMap).filter(([id]) => matchIds.has(id)),
+        ),
+      },
+    }));
+  }, [matches, activeLeague]);
 
   useEffect(() => {
-    const state: StoredState = {
-      pairCount,
-      completedIds,
-    };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [pairCount, completedIds]);
+    if (typeof window === 'undefined') {
+      return;
+    }
+    (['A', 'B'] as LeagueId[]).forEach((leagueId) => {
+      window.localStorage.setItem(leagueKey(leagueId), JSON.stringify(leagues[leagueId]));
+    });
+    window.localStorage.setItem(ACTIVE_LEAGUE_KEY, activeLeague);
+  }, [leagues, activeLeague]);
+
+  const completedIds = Object.keys(currentLeague.completedMap).filter(
+    (id) => currentLeague.completedMap[id],
+  );
 
   const totalMatches = matches.length;
   const completedCount = completedIds.length;
   const progress = totalMatches === 0 ? 0 : Math.round((completedCount / totalMatches) * 100);
 
   const handleToggle = (id: string) => {
-    setCompletedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
+    setLeagues((prev) => {
+      const current = prev[activeLeague];
+      return {
+        ...prev,
+        [activeLeague]: {
+          ...current,
+          completedMap: {
+            ...current.completedMap,
+            [id]: !current.completedMap[id],
+          },
+        },
+      };
+    });
   };
 
   const handlePairCountChange = (value: string) => {
@@ -93,11 +172,55 @@ const App = () => {
       return;
     }
     const bounded = Math.max(2, Math.floor(parsed));
-    setPairCount(bounded);
+    setLeagues((prev) => ({
+      ...prev,
+      [activeLeague]: {
+        ...prev[activeLeague],
+        pairCount: bounded,
+      },
+    }));
+  };
+
+  const handleResetLeague = () => {
+    setLeagues((prev) => ({
+      ...prev,
+      [activeLeague]: {
+        ...prev[activeLeague],
+        completedMap: {},
+      },
+    }));
+  };
+
+  const handleLeagueChange = (leagueId: LeagueId) => {
+    setActiveLeague(leagueId);
+  };
+
+  const handleStepperChange = (delta: number) => {
+    setLeagues((prev) => ({
+      ...prev,
+      [activeLeague]: {
+        ...prev[activeLeague],
+        pairCount: Math.max(2, prev[activeLeague].pairCount + delta),
+      },
+    }));
   };
 
   return (
     <div className="app">
+      <nav className="league-tabs">
+        {(['A', 'B'] as LeagueId[]).map((leagueId) => (
+          <button
+            key={leagueId}
+            type="button"
+            className={`league-tabs__button ${
+              activeLeague === leagueId ? 'league-tabs__button--active' : ''
+            }`}
+            onClick={() => handleLeagueChange(leagueId)}
+          >
+            リーグ{leagueId}
+          </button>
+        ))}
+      </nav>
       <header className="app__header">
         <div>
           <p className="app__eyebrow">テニス練習会</p>
@@ -105,6 +228,15 @@ const App = () => {
           <p className="app__description">
             ペア数を入力すると総当たりの対戦表が自動生成されます。完了した試合をチェックして進捗を確認できます。
           </p>
+          <div className="league-badge">現在のリーグ: リーグ{activeLeague}</div>
+          <button
+            type="button"
+            className="reset-button"
+            onClick={handleResetLeague}
+            disabled={completedCount === 0}
+          >
+            このリーグをリセット
+          </button>
         </div>
         <div className="input-card">
           <label htmlFor="pairCount">ペア数</label>
@@ -113,14 +245,14 @@ const App = () => {
               id="pairCount"
               type="number"
               min={2}
-              value={pairCount}
+              value={currentLeague.pairCount}
               onChange={(event) => handlePairCountChange(event.target.value)}
             />
             <div className="input-stepper__buttons">
               <button
                 type="button"
                 className="input-stepper__button"
-                onClick={() => setPairCount((prev) => Math.max(2, prev + 1))}
+                onClick={() => handleStepperChange(1)}
                 aria-label="ペア数を増やす"
               >
                 +
@@ -128,7 +260,7 @@ const App = () => {
               <button
                 type="button"
                 className="input-stepper__button"
-                onClick={() => setPairCount((prev) => Math.max(2, prev - 1))}
+                onClick={() => handleStepperChange(-1)}
                 aria-label="ペア数を減らす"
               >
                 −

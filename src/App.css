@@ -12,6 +12,29 @@
   gap: 14px;
 }
 
+.league-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.league-tabs__button {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid #d4daf0;
+  background: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b5a78;
+  cursor: pointer;
+}
+
+.league-tabs__button--active {
+  background: #2d3d63;
+  color: #ffffff;
+  border-color: #2d3d63;
+}
+
 .app__header {
   display: flex;
   flex-direction: column;
@@ -41,6 +64,36 @@
   color: #4b5a78;
   line-height: 1.6;
   font-size: 0.95rem;
+}
+
+.league-badge {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef1fb;
+  color: #3b4a6b;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.reset-button {
+  margin-top: 12px;
+  min-height: 44px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #2d3d63;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reset-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .input-card {
@@ -185,6 +238,10 @@
     padding: 28px 20px 32px;
   }
 
+  .league-tabs {
+    max-width: 360px;
+  }
+
   .app__header {
     flex-direction: row;
     justify-content: space-between;
@@ -193,6 +250,11 @@
 
   .input-card {
     min-width: 220px;
+  }
+
+  .reset-button {
+    width: auto;
+    padding: 0 20px;
   }
 
   .matches__list {
