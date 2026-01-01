@@ -1,0 +1,16 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+  background: #f6f7fb;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+input,
+button {
+  font-family: inherit;
+}
