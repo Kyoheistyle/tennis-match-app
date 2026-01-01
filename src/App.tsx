@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { supabase } from './lib/supabase'
 import './App.css';
 
 const STORAGE_NAMESPACE = 'tennisMatchApp:league';
@@ -22,6 +23,13 @@ type Match = {
   pairA: number;
   pairB: number;
 };
+
+type MatchRow = {
+  league: LeagueId;
+  match_key: string;
+  completed: boolean;
+};
+
 
 const defaultLeagueState: LeagueState = {
   pairCount: 4,
@@ -119,6 +127,72 @@ const App = () => {
     [currentLeague.pairCount],
   );
 
+ useEffect(() => {
+  const loadFromSupabase = async () => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('league, match_key, completed')
+      .eq('league', activeLeague);
+
+    if (error) {
+      console.error('Supabase load error:', error);
+      return;
+    }
+
+    const completedMap: Record<string, boolean> = {};
+    for (const row of (data ?? []) as MatchRow[]) {
+      completedMap[row.match_key] = !!row.completed;
+    }
+
+    setLeagues((prev) => ({
+      ...prev,
+      [activeLeague]: {
+        ...prev[activeLeague],
+        completedMap,
+      },
+    }));
+  };
+
+  loadFromSupabase();
+}, [activeLeague]);
+
+
+useEffect(() => {
+  const channel = supabase
+    .channel(`realtime:matches:${activeLeague}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'matches',
+        filter: `league=eq.${activeLeague}`,
+      },
+      (payload) => {
+        const row = (payload.new ?? payload.old) as unknown as MatchRow;
+        if (!row?.match_key) return;
+
+        setLeagues((prev) => ({
+          ...prev,
+          [activeLeague]: {
+            ...prev[activeLeague],
+            completedMap: {
+              ...prev[activeLeague].completedMap,
+              [row.match_key]: !!row.completed,
+            },
+          },
+        }));
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [activeLeague]);
+
+
+
   useEffect(() => {
     const matchIds = new Set(matches.map((match) => match.id));
     setLeagues((prev) => ({
@@ -150,21 +224,45 @@ const App = () => {
   const completedCount = completedIds.length;
   const progress = totalMatches === 0 ? 0 : Math.round((completedCount / totalMatches) * 100);
 
-  const handleToggle = (id: string) => {
-    setLeagues((prev) => {
-      const current = prev[activeLeague];
-      return {
-        ...prev,
-        [activeLeague]: {
-          ...current,
-          completedMap: {
-            ...current.completedMap,
-            [id]: !current.completedMap[id],
-          },
+const saveCompleted = async (league: LeagueId, matchKey: string, completed: boolean) => {
+  console.log('[saveCompleted] start', { league, matchKey, completed });
+
+  const { error } = await supabase
+    .from('matches')
+    .upsert(
+      { league, match_key: matchKey, completed },
+      { onConflict: 'league,match_key' },
+    );
+
+  if (error) {
+    console.error('Supabase save error:', error);
+  }
+};
+
+
+const handleToggle = async (id: string) => {
+  console.log('[handleToggle] clicked', { id, activeLeague }); // ★これ追加
+  const next = !currentLeague.completedMap[id];
+
+  // 画面は即時反映（楽観更新）
+  setLeagues((prev) => {
+    const current = prev[activeLeague];
+    return {
+      ...prev,
+      [activeLeague]: {
+        ...current,
+        completedMap: {
+          ...current.completedMap,
+          [id]: !current.completedMap[id],
         },
-      };
-    });
-  };
+      },
+    };
+  });
+
+  // DBへ保存
+  await saveCompleted(activeLeague, id, next);
+};
+
 
   const handlePairCountChange = (value: string) => {
     const parsed = Number(value);
