@@ -65,6 +65,34 @@
   background: #ffffff;
 }
 
+.input-stepper {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.input-stepper__buttons {
+  display: grid;
+  gap: 8px;
+}
+
+.input-stepper__button {
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid #c7d0ea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #2d3d63;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.input-stepper__button:active {
+  transform: scale(0.98);
+}
+
 .input-help {
   margin: 0;
   font-size: 0.85rem;

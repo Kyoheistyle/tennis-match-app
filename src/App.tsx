@@ -108,13 +108,33 @@ const App = () => {
         </div>
         <div className="input-card">
           <label htmlFor="pairCount">ペア数</label>
-          <input
-            id="pairCount"
-            type="number"
-            min={2}
-            value={pairCount}
-            onChange={(event) => handlePairCountChange(event.target.value)}
-          />
+          <div className="input-stepper">
+            <input
+              id="pairCount"
+              type="number"
+              min={2}
+              value={pairCount}
+              onChange={(event) => handlePairCountChange(event.target.value)}
+            />
+            <div className="input-stepper__buttons">
+              <button
+                type="button"
+                className="input-stepper__button"
+                onClick={() => setPairCount((prev) => Math.max(2, prev + 1))}
+                aria-label="ペア数を増やす"
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="input-stepper__button"
+                onClick={() => setPairCount((prev) => Math.max(2, prev - 1))}
+                aria-label="ペア数を減らす"
+              >
+                −
+              </button>
+            </div>
+          </div>
           <p className="input-help">2以上の整数を入力してください</p>
         </div>
       </header>
