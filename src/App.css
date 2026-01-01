@@ -6,25 +6,25 @@
   min-height: 100vh;
   background: #f6f7fb;
   color: #1f2a44;
-  padding: 24px 16px 40px;
+  padding: 16px 14px 24px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
 }
 
 .app__header {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   background: #ffffff;
   border-radius: 16px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 10px 30px rgba(31, 42, 68, 0.08);
 }
 
 .app__header h1 {
-  margin: 4px 0 8px;
-  font-size: 1.8rem;
+  margin: 4px 0 6px;
+  font-size: 1.2rem;
 }
 
 .app__eyebrow {
@@ -40,6 +40,7 @@
   margin: 0;
   color: #4b5a78;
   line-height: 1.6;
+  font-size: 0.95rem;
 }
 
 .input-card {
@@ -47,7 +48,7 @@
   gap: 8px;
   background: #f0f3ff;
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px;
 }
 
 .input-card label {
@@ -56,6 +57,7 @@
 
 .input-card input {
   width: 100%;
+  min-height: 44px;
   padding: 10px 12px;
   border: 1px solid #c7d0ea;
   border-radius: 8px;
@@ -72,7 +74,7 @@
 .progress {
   background: #ffffff;
   border-radius: 16px;
-  padding: 16px 20px;
+  padding: 16px;
   display: grid;
   gap: 12px;
   box-shadow: 0 10px 30px rgba(31, 42, 68, 0.08);
@@ -102,7 +104,7 @@
 .matches {
   background: #ffffff;
   border-radius: 16px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 10px 30px rgba(31, 42, 68, 0.08);
 }
 
@@ -135,11 +137,14 @@
   align-items: center;
   gap: 12px;
   font-weight: 500;
+  width: 100%;
+  min-height: 48px;
+  cursor: pointer;
 }
 
 .matches__label input {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
 }
 
 .matches__empty {
@@ -147,9 +152,9 @@
   color: #6b7a99;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 600px) {
   .app {
-    padding: 40px;
+    padding: 28px 20px 32px;
   }
 
   .app__header {
