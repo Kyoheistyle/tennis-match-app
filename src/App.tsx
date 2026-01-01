@@ -136,7 +136,7 @@ const App = () => {
           <p className="matches__empty">ペア数を増やすと試合が表示されます。</p>
         ) : (
           <ul className="matches__list">
-            {matches.map((match) => {
+            {matches.map((match, index) => {
               const isCompleted = completedIds.includes(match.id);
               return (
                 <li
@@ -150,7 +150,7 @@ const App = () => {
                       onChange={() => handleToggle(match.id)}
                     />
                     <span>
-                      ペア{match.pairA} vs ペア{match.pairB}
+                      {index + 1}. ペア{match.pairA} vs ペア{match.pairB}
                     </span>
                   </label>
                 </li>
