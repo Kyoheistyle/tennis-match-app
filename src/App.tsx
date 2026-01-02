@@ -133,6 +133,23 @@ const [leagues, setLeagues] = useState<Record<LeagueId, LeagueState>>(() => {
     [currentLeague.pairCount],
   );
 
+  useEffect(() => {
+  const run = async () => {
+    const pairCount = await loadPairCount(activeLeague);
+    if (pairCount == null) return;
+
+    setLeagues((prev) => ({
+      ...prev,
+      [activeLeague]: {
+        ...prev[activeLeague],
+        pairCount,
+      },
+    }));
+  };
+
+  run();
+}, [activeLeague]);
+
 useEffect(() => {
   let cancelled = false;
 
@@ -181,6 +198,42 @@ useEffect(() => {
 
 useEffect(() => {
   const channel = supabase
+    .channel(`realtime:league_settings:${activeLeague}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'league_settings',
+      },
+      (payload) => {
+        const row = (payload.new ?? payload.old) as unknown as {
+          league: LeagueId;
+          pair_count: number;
+        };
+
+        if (!row?.league) return;
+        if (row.league !== activeLeague) return;
+
+
+        setLeagues((prev) => ({
+          ...prev,
+          [activeLeague]: {
+            ...prev[activeLeague],
+            pairCount: row.pair_count,
+          },
+        }));
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [activeLeague]);
+
+useEffect(() => {
+  const channel = supabase
     .channel(`realtime:matches:${activeLeague}`)
     .on(
       'postgres_changes',
@@ -188,16 +241,16 @@ useEffect(() => {
         event: '*',
         schema: 'public',
         table: 'matches',
-        filter: `league=eq.${activeLeague}`,
       },
       (payload) => {
         const row = (payload.new ?? payload.old) as unknown as MatchRow;
         if (!row?.match_key) return;
+        if (row.league !== activeLeague) return;
 
         setLeagues((prev) => {
           const pairCount = prev[activeLeague].pairCount;
           const allowed = new Set(generateMatches(pairCount).map((m) => m.id));
-          if (!allowed.has(row.match_key)) return prev; // 今の表示対象外は無視
+          if (!allowed.has(row.match_key)) return prev;
 
           return {
             ...prev,
@@ -270,6 +323,29 @@ const saveCompleted = async (league: LeagueId, matchKey: string, completed: bool
   }
 };
 
+const loadPairCount = async (league: LeagueId) => {
+  const { data, error } = await supabase
+    .from('league_settings')
+    .select('pair_count')
+    .eq('league', league)
+    .single();
+
+  if (error) {
+    console.error('Supabase load pair_count error:', error);
+    return null;
+  }
+  return data?.pair_count ?? null;
+};
+
+const savePairCount = async (league: LeagueId, pairCount: number) => {
+  const { error } = await supabase
+    .from('league_settings')
+    .upsert({ league, pair_count: pairCount }, { onConflict: 'league' });
+
+  if (error) {
+    console.error('Supabase save pair_count error:', error);
+  }
+};
 
 const handleToggle = async (id: string) => {
   console.log('[handleToggle] clicked', { id, activeLeague }); // ★これ追加
@@ -292,6 +368,11 @@ const handleToggle = async (id: string) => {
 
   // DBへ保存
   await saveCompleted(activeLeague, id, next);
+};
+
+const handleLeagueChange = (leagueId: LeagueId) => {
+  console.log('[handleLeagueChange]', leagueId);
+  setActiveLeague(leagueId);
 };
 
 const resetLeagueInSupabase = async (league: LeagueId, pairCount: number) => {
@@ -328,23 +409,28 @@ const handleResetLeague = async () => {
 };
 
 
-  const handleLeagueChange = (leagueId: LeagueId) => {
-    setActiveLeague(leagueId);
-  };
+const handleStepperChange = async (delta: number) => {
+  // チェックが1つでもある場合は変更不可
+  if (!canEditPairCount) return;
 
-  const handleStepperChange = (delta: number) => {
-    setLeagues((prev) => ({
-      ...prev,
-      [activeLeague]: {
-        ...prev[activeLeague],
-pairCount: Math.min(
-  MAX_PAIR_COUNT,
-  Math.max(MIN_PAIR_COUNT, prev[activeLeague].pairCount + delta),
-),
+  const next = Math.min(
+    MAX_PAIR_COUNT,
+    Math.max(MIN_PAIR_COUNT, currentLeague.pairCount + delta),
+  );
 
-      },
-    }));
-  };
+  // ① 画面を即時更新
+  setLeagues((prev) => ({
+    ...prev,
+    [activeLeague]: {
+      ...prev[activeLeague],
+      pairCount: next,
+    },
+  }));
+
+  // ② Supabase に保存（←これが同期の肝）
+  await savePairCount(activeLeague, next);
+};
+
 
   return (
     <div className="app">
