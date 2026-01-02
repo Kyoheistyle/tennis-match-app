@@ -127,34 +127,50 @@ const App = () => {
     [currentLeague.pairCount],
   );
 
- useEffect(() => {
+useEffect(() => {
+  let cancelled = false;
+
   const loadFromSupabase = async () => {
     const { data, error } = await supabase
       .from('matches')
       .select('league, match_key, completed')
       .eq('league', activeLeague);
 
+    if (cancelled) return;
+
     if (error) {
       console.error('Supabase load error:', error);
       return;
     }
 
-    const completedMap: Record<string, boolean> = {};
-    for (const row of (data ?? []) as MatchRow[]) {
-      completedMap[row.match_key] = !!row.completed;
-    }
+    setLeagues((prev) => {
+      const pairCount = prev[activeLeague].pairCount;
+      const allowed = new Set(generateMatches(pairCount).map((m) => m.id));
 
-    setLeagues((prev) => ({
-      ...prev,
-      [activeLeague]: {
-        ...prev[activeLeague],
-        completedMap,
-      },
-    }));
+      const completedMap: Record<string, boolean> = {};
+      for (const row of (data ?? []) as MatchRow[]) {
+        if (!allowed.has(row.match_key)) continue;
+        completedMap[row.match_key] = !!row.completed;
+      }
+
+      return {
+        ...prev,
+        [activeLeague]: {
+          ...prev[activeLeague],
+          completedMap,
+        },
+      };
+    });
   };
 
   loadFromSupabase();
+
+  return () => {
+    cancelled = true;
+  };
 }, [activeLeague]);
+
+
 
 
 useEffect(() => {
@@ -172,16 +188,22 @@ useEffect(() => {
         const row = (payload.new ?? payload.old) as unknown as MatchRow;
         if (!row?.match_key) return;
 
-        setLeagues((prev) => ({
-          ...prev,
-          [activeLeague]: {
-            ...prev[activeLeague],
-            completedMap: {
-              ...prev[activeLeague].completedMap,
-              [row.match_key]: !!row.completed,
+        setLeagues((prev) => {
+          const pairCount = prev[activeLeague].pairCount;
+          const allowed = new Set(generateMatches(pairCount).map((m) => m.id));
+          if (!allowed.has(row.match_key)) return prev; // 今の表示対象外は無視
+
+          return {
+            ...prev,
+            [activeLeague]: {
+              ...prev[activeLeague],
+              completedMap: {
+                ...prev[activeLeague].completedMap,
+                [row.match_key]: !!row.completed,
+              },
             },
-          },
-        }));
+          };
+        });
       },
     )
     .subscribe();
@@ -190,6 +212,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [activeLeague]);
+
 
 
 
@@ -264,6 +287,22 @@ const handleToggle = async (id: string) => {
   await saveCompleted(activeLeague, id, next);
 };
 
+const resetLeagueInSupabase = async (league: LeagueId, pairCount: number) => {
+  const matchRows = generateMatches(pairCount).map((m) => ({
+    league,
+    match_key: m.id,
+    completed: false,
+  }));
+
+  const { error } = await supabase
+    .from('matches')
+    .upsert(matchRows, { onConflict: 'league,match_key' });
+
+  if (error) {
+    console.error('Supabase reset error:', error);
+  }
+};
+
 
   const handlePairCountChange = (value: string) => {
     const parsed = Number(value);
@@ -280,15 +319,22 @@ const handleToggle = async (id: string) => {
     }));
   };
 
-  const handleResetLeague = () => {
-    setLeagues((prev) => ({
-      ...prev,
-      [activeLeague]: {
-        ...prev[activeLeague],
-        completedMap: {},
-      },
-    }));
-  };
+const handleResetLeague = async () => {
+  const pairCount = leagues[activeLeague].pairCount;
+
+  // ① 画面は即時反映（先に消す）
+  setLeagues((prev) => ({
+    ...prev,
+    [activeLeague]: {
+      ...prev[activeLeague],
+      completedMap: {},
+    },
+  }));
+
+  // ② DB もリセット（同じ pairCount を使う）
+  await resetLeagueInSupabase(activeLeague, pairCount);
+};
+
 
   const handleLeagueChange = (leagueId: LeagueId) => {
     setActiveLeague(leagueId);
