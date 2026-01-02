@@ -41,18 +41,51 @@ const defaultLeagueState: LeagueState = {
 };
 
 const generateMatches = (pairCount: number): Match[] => {
+  // サークル方式（circle method）で「ラウンド順」に並べる
+  // - 偶数: 1ラウンドで全員が1回出る（pairCount/2試合）
+  // - 奇数: BYE(休み)を1つ入れて回す
+
+  const n = pairCount;
+  if (n < 2) return [];
+
+  const hasBye = n % 2 === 1;
+  const size = hasBye ? n + 1 : n;
+
+  // 1..n に加えて、奇数なら BYE(=0) を追加
+  const players: number[] = Array.from({ length: size }, (_, i) => (i + 1 <= n ? i + 1 : 0));
+
+  const rounds = size - 1;
   const matches: Match[] = [];
-  for (let i = 1; i <= pairCount; i += 1) {
-    for (let j = i + 1; j <= pairCount; j += 1) {
+
+  for (let r = 0; r < rounds; r += 1) {
+    // 1ラウンド分
+    for (let i = 0; i < size / 2; i += 1) {
+      const a = players[i];
+      const b = players[size - 1 - i];
+      if (a === 0 || b === 0) continue; // BYEは除外
+
+      // id は必ず "小さい-大きい" にして、既存キーと互換維持
+      const p1 = Math.min(a, b);
+      const p2 = Math.max(a, b);
+
       matches.push({
-        id: `${i}-${j}`,
-        pairA: i,
-        pairB: j,
+        id: `${p1}-${p2}`,
+        pairA: p1,
+        pairB: p2,
       });
     }
+
+    // rotation（先頭固定で残りを回す）
+    // [固定, ...rest] の rest を右回転
+    const fixed = players[0];
+    const rest = players.slice(1);
+    rest.unshift(rest.pop() as number);
+    players.splice(0, players.length, fixed, ...rest);
   }
+
   return matches;
 };
+
 
 const leagueKey = (leagueId: LeagueId) => `${STORAGE_NAMESPACE}:${leagueId}`;
 
