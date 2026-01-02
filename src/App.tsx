@@ -31,6 +31,9 @@ type MatchRow = {
   completed: boolean;
 };
 
+// ★ここに追加
+const MIN_PAIR_COUNT = 2;
+const MAX_PAIR_COUNT = 100;
 
 const defaultLeagueState: LeagueState = {
   pairCount: 4,
@@ -308,21 +311,6 @@ const resetLeagueInSupabase = async (league: LeagueId, pairCount: number) => {
 };
 
 
-  const handlePairCountChange = (value: string) => {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) {
-      return;
-    }
-    const bounded = Math.max(2, Math.floor(parsed));
-    setLeagues((prev) => ({
-      ...prev,
-      [activeLeague]: {
-        ...prev[activeLeague],
-        pairCount: bounded,
-      },
-    }));
-  };
-
 const handleResetLeague = async () => {
   const pairCount = leagues[activeLeague].pairCount;
 
@@ -349,7 +337,11 @@ const handleResetLeague = async () => {
       ...prev,
       [activeLeague]: {
         ...prev[activeLeague],
-        pairCount: Math.max(2, prev[activeLeague].pairCount + delta),
+pairCount: Math.min(
+  MAX_PAIR_COUNT,
+  Math.max(MIN_PAIR_COUNT, prev[activeLeague].pairCount + delta),
+),
+
       },
     }));
   };
@@ -390,13 +382,14 @@ const handleResetLeague = async () => {
         <div className="input-card">
           <label htmlFor="pairCount">ペア数</label>
           <div className="input-stepper">
-            <input
-              id="pairCount"
-              type="number"
-              min={2}
-              value={currentLeague.pairCount}
-              onChange={(event) => handlePairCountChange(event.target.value)}
-              disabled={!canEditPairCount}
+<input
+  id="pairCount"
+  type="number"
+  min={MIN_PAIR_COUNT}
+  max={MAX_PAIR_COUNT}
+  value={currentLeague.pairCount}
+  readOnly        // ★入力不可
+  disabled        // ★フォーカスも不可（矢印操作のみ）
             />
             <div className="input-stepper__buttons">
               <button
@@ -404,7 +397,7 @@ const handleResetLeague = async () => {
                 className="input-stepper__button"
                 onClick={() => handleStepperChange(1)}
                 aria-label="ペア数を増やす"
-                disabled={!canEditPairCount}
+disabled={!canEditPairCount || currentLeague.pairCount >= MAX_PAIR_COUNT}
               >
                 +
               </button>
@@ -413,7 +406,7 @@ const handleResetLeague = async () => {
                 className="input-stepper__button"
                 onClick={() => handleStepperChange(-1)}
                 aria-label="ペア数を減らす"
-                disabled={!canEditPairCount}
+disabled={!canEditPairCount || currentLeague.pairCount <= MIN_PAIR_COUNT}
               >
                 −
               </button>
