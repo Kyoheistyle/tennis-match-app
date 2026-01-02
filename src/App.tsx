@@ -6,7 +6,8 @@ const STORAGE_NAMESPACE = 'tennisMatchApp:league';
 const ACTIVE_LEAGUE_KEY = 'tennisMatchApp:activeLeague';
 const LEGACY_STORAGE_KEY = 'tennis-match-progress';
 
-type LeagueId = 'A' | 'B';
+type LeagueId = 'A' | 'B' | 'C' | 'D' | 'E';
+const LEAGUES: LeagueId[] = ['A', 'B', 'C', 'D', 'E'];
 
 type LegacyStoredState = {
   pairCount: number;
@@ -114,12 +115,14 @@ const App = () => {
       return 'A';
     }
     const stored = window.localStorage.getItem(ACTIVE_LEAGUE_KEY);
-    return stored === 'B' ? 'B' : 'A';
+return LEAGUES.includes(stored as LeagueId) ? (stored as LeagueId) : 'A';
   });
-  const [leagues, setLeagues] = useState<Record<LeagueId, LeagueState>>(() => ({
-    A: loadLeagueState('A'),
-    B: loadLeagueState('B'),
-  }));
+const [leagues, setLeagues] = useState<Record<LeagueId, LeagueState>>(() => {
+  return Object.fromEntries(LEAGUES.map((id) => [id, loadLeagueState(id)])) as Record<
+    LeagueId,
+    LeagueState
+  >;
+});
 
   const currentLeague = leagues[activeLeague];
   const matches = useMemo(
@@ -233,9 +236,10 @@ useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
-    (['A', 'B'] as LeagueId[]).forEach((leagueId) => {
-      window.localStorage.setItem(leagueKey(leagueId), JSON.stringify(leagues[leagueId]));
-    });
+LEAGUES.forEach((leagueId) => {
+  window.localStorage.setItem(leagueKey(leagueId), JSON.stringify(leagues[leagueId]));
+});
+
     window.localStorage.setItem(ACTIVE_LEAGUE_KEY, activeLeague);
   }, [leagues, activeLeague]);
 
@@ -353,7 +357,7 @@ const handleResetLeague = async () => {
   return (
     <div className="app">
       <nav className="league-tabs">
-        {(['A', 'B'] as LeagueId[]).map((leagueId) => (
+{LEAGUES.map((leagueId) => (
           <button
             key={leagueId}
             type="button"

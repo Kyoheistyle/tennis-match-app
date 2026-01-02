@@ -12,20 +12,31 @@
   gap: 14px;
 }
 
+/* =========================
+   League Tabs（A〜E）
+   1列横並び・スマホ最優先
+   ========================= */
+
 .league-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
 }
 
 .league-tabs__button {
+  flex: 0 0 auto;
   min-height: 44px;
+  padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid #d4daf0;
   background: #ffffff;
-  font-size: 0.95rem;
+  font-size: 14px;
   font-weight: 600;
   color: #4b5a78;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -34,6 +45,7 @@
   color: #ffffff;
   border-color: #2d3d63;
 }
+
 
 .app__header {
   display: flex;
@@ -239,7 +251,7 @@
   }
 
   .league-tabs {
-    max-width: 360px;
+    max-width: none;
   }
 
   .app__header {
@@ -267,4 +279,20 @@
     max-width: 960px;
     margin: 0 auto;
   }
+}
+/* リーグタブ：A〜Eを1列横並び（狭い画面は横スクロールで崩れない） */
+.league-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+}
+
+.league-tabs__button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 10px 14px;
+  font-size: 14px;
 }
