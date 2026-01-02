@@ -222,6 +222,7 @@ useEffect(() => {
 
   const totalMatches = matches.length;
   const completedCount = completedIds.length;
+  const canEditPairCount = completedCount === 0;
   const progress = totalMatches === 0 ? 0 : Math.round((completedCount / totalMatches) * 100);
 
 const saveCompleted = async (league: LeagueId, matchKey: string, completed: boolean) => {
@@ -345,6 +346,7 @@ const handleToggle = async (id: string) => {
               min={2}
               value={currentLeague.pairCount}
               onChange={(event) => handlePairCountChange(event.target.value)}
+              disabled={!canEditPairCount}
             />
             <div className="input-stepper__buttons">
               <button
@@ -352,6 +354,7 @@ const handleToggle = async (id: string) => {
                 className="input-stepper__button"
                 onClick={() => handleStepperChange(1)}
                 aria-label="ペア数を増やす"
+                disabled={!canEditPairCount}
               >
                 +
               </button>
@@ -360,12 +363,16 @@ const handleToggle = async (id: string) => {
                 className="input-stepper__button"
                 onClick={() => handleStepperChange(-1)}
                 aria-label="ペア数を減らす"
+                disabled={!canEditPairCount}
               >
                 −
               </button>
             </div>
           </div>
-          <p className="input-help">2以上の整数を入力してください</p>
+          <p className="input-help">
+            {canEditPairCount
+    ? '2以上の整数を入力してください'
+    : 'ペア数を変更するには、このリーグをリセットするか、チェックを全て外してください'}</p>
         </div>
       </header>
 
