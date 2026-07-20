@@ -1,0 +1,12 @@
+node_modules/
+
+# 環境変数（.env.local / .env.production 等も含めて除外）
+.env
+.env.*
+!.env.example
+
+# ビルド成果物
+dist/
+
+# TypeScript の増分ビルド情報（tsc -b が生成）
+*.tsbuildinfo

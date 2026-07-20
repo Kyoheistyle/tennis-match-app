@@ -1,0 +1,484 @@
+:root {
+  color-scheme: light;
+}
+
+.app {
+  min-height: 100vh;
+  background: #f6f7fb;
+  color: #1f2a44;
+  padding: 16px 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* =========================
+   League Tabs（A〜E）
+   ========================= */
+
+.league-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+}
+
+.league-tabs__button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #d4daf0;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5a78;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.league-tabs__button--active {
+  background: #2d3d63;
+  color: #ffffff;
+  border-color: #2d3d63;
+}
+
+/* =========================
+   通知バー
+   ========================= */
+
+.notice {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff4e0;
+  border: 1px solid #f0c987;
+  color: #7a5320;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* =========================
+   設定・セッション
+   ========================= */
+
+.app__header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(31, 42, 68, 0.08);
+}
+
+.settings {
+  display: grid;
+  gap: 10px;
+}
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f0f3ff;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.settings__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #3b4a6b;
+}
+
+.settings__stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings__value {
+  min-width: 2.2em;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2d3d63;
+}
+
+.input-stepper__button {
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid #c7d0ea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #2d3d63;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.input-stepper__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.input-stepper__button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.session {
+  display: grid;
+  gap: 10px;
+}
+
+.session__count {
+  font-size: 0.95rem;
+  color: #3b4a6b;
+}
+
+.session__count strong {
+  font-size: 1.25rem;
+  color: #2d3d63;
+}
+
+.session__total {
+  color: #8a94ad;
+  font-size: 0.8rem;
+}
+
+.session__confirm {
+  background: #fff1f1;
+  border: 1px solid #f0b8b8;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.session__confirm p {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #8a3b3b;
+}
+
+.session__confirm-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* =========================
+   ボタン共通
+   ========================= */
+
+.primary-button,
+.reset-button,
+.danger-button,
+.ghost-button {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: none;
+  background: #2d3d63;
+  color: #ffffff;
+}
+
+.reset-button {
+  border: 1px solid #c7d0ea;
+  background: #ffffff;
+  color: #4b5a78;
+}
+
+.danger-button {
+  border: none;
+  background: #c0392b;
+  color: #ffffff;
+}
+
+.ghost-button {
+  border: 1px solid #d4daf0;
+  background: #ffffff;
+  color: #4b5a78;
+}
+
+.primary-button:active,
+.danger-button:active,
+.ghost-button:active {
+  transform: scale(0.99);
+}
+
+/* =========================
+   コートカード
+   ========================= */
+
+.courts {
+  display: grid;
+  gap: 12px;
+}
+
+.court {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(31, 42, 68, 0.08);
+  display: grid;
+  gap: 8px;
+}
+
+.court--busy {
+  border-left: 4px solid #3f6ff5;
+}
+
+.court--free {
+  border-left: 4px solid #d4daf0;
+}
+
+.court__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.court__name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #2d3d63;
+}
+
+.court__badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef1fb;
+  color: #6b7a99;
+}
+
+.court__badge--busy {
+  background: #e3ecff;
+  color: #2f5bd0;
+}
+
+.court__label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8a94ad;
+  letter-spacing: 0.04em;
+}
+
+.court__match {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f2a44;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.court__vs {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8a94ad;
+  margin: 0 4px;
+}
+
+.court__meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7a99;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.court__empty {
+  margin: 6px 0;
+  font-size: 0.9rem;
+  color: #8a94ad;
+}
+
+/* =========================
+   ペア一覧（3列・375pxで横スクロールなし）
+   ========================= */
+
+.pairs {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(31, 42, 68, 0.08);
+}
+
+.pairs__title {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: #2d3d63;
+}
+
+.pair-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pair-cell {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid #e1e6f2;
+  border-radius: 10px;
+  background: #f9faff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pair-cell__name {
+  font-size: clamp(11px, 3.2vw, 13px);
+  font-weight: 700;
+  color: #2d3d63;
+  overflow-wrap: anywhere;
+}
+
+.pair-cell__games {
+  font-size: clamp(10px, 3vw, 12px);
+  color: #4b5a78;
+}
+
+.pair-cell__status {
+  font-size: clamp(9px, 2.8vw, 11px);
+  color: #8a94ad;
+  overflow-wrap: anywhere;
+}
+
+.pair-cell--playing {
+  background: #e3ecff;
+  border-color: #b9cdfa;
+}
+
+.pair-cell--playing .pair-cell__status {
+  color: #2f5bd0;
+  font-weight: 700;
+}
+
+.pair-cell--inactive {
+  background: #f1f1f1;
+  color: #9aa3b6;
+}
+
+.pair-cell--inactive .pair-cell__name,
+.pair-cell--inactive .pair-cell__games {
+  color: #9aa3b6;
+  text-decoration: line-through;
+}
+
+.pair-cell--selected {
+  background: #2d3d63;
+  border-color: #2d3d63;
+}
+
+.pair-cell--selected .pair-cell__name,
+.pair-cell--selected .pair-cell__games,
+.pair-cell--selected .pair-cell__status {
+  color: #ffffff;
+}
+
+.pair-cell--disabled,
+.pair-cell:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* =========================
+   手動選択
+   ========================= */
+
+.picker {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(31, 42, 68, 0.08);
+  display: grid;
+  gap: 12px;
+}
+
+.picker__head {
+  display: grid;
+  gap: 10px;
+}
+
+.picker__head h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #2d3d63;
+}
+
+.picker__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #4b5a78;
+}
+
+.picker__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #8a94ad;
+}
+
+/* =========================
+   タブレット以上
+   ========================= */
+
+@media (min-width: 600px) {
+  .app {
+    padding: 28px 20px 32px;
+  }
+
+  .courts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pair-grid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  }
+
+  .picker__head {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .ghost-button,
+  .reset-button {
+    width: auto;
+    padding: 0 18px;
+  }
+
+  .court .ghost-button,
+  .court .primary-button,
+  .session .reset-button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+}
